@@ -13,13 +13,13 @@ def knowledge_distillation(teacher_model, student_model, train_data, evaluate_da
     student_model.train()
     for epoch in range(num_epoch):
         for step, batch_data in enumerate(train_data):
-            batch = tuple(t.to(device) for t in batch)
+            batch_data = tuple(t.to(device) for t in batch_data)
             # split_data is a function that split train data to teacher and student
             if split_data:
                 teacher_batch_data, student_batch_data = split_data(batch_data)
                 with torch.no_grad():
-                    teacher_output = teacher_model.forward(*teacher_batch_data)
-                student_output = student_model.forward(*student_batch_data)
+                    teacher_output = teacher_model.forward(*(teacher_batch_data[0:3]))
+                student_output = student_model.forward(*(student_batch_data[0:3]))
             else:
                 with torch.no_grad():
                     teacher_output = teacher_model.forward(*batch_data)

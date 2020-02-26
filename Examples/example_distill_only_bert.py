@@ -120,7 +120,7 @@ def features_to_tensor(output_mode, features):
     all_input_ids = torch.tensor([f.input_ids for f in features], dtype=torch.long)
     all_input_mask = torch.tensor([f.input_mask for f in features], dtype=torch.long)
     all_segment_ids = torch.tensor([f.segment_ids for f in features], dtype=torch.long)
-    return all_input_ids, all_input_mask, all_segment_ids, all_label_ids, all_seq_lengths
+    return all_input_ids, all_segment_ids, all_input_mask, all_label_ids, all_seq_lengths
 
 
 names = ['db_zhongyingrenshou_20190409#573', 'db_youzu_20190409#101', 'robot3_meidi_20190528#101',
@@ -133,7 +133,7 @@ names = ['db_zhongyingrenshou_20190409#573', 'db_youzu_20190409#101', 'robot3_me
          'db_shanghaitushu_20190409#17169', 'db_debang_duinei_20190409#101', 'robot3_dianli_0428#101',
          'db_boxijiadian_20190409#105', 'db_zhaobiaowang_20190409#101', 'robot4_haikang_20180606#83',
          'db_saikesi_20190409#1037', 'robot4_wuxianji_20180615#34', 'robot3_fangxin_20190125#101',
-         'db_guotairenshou_20190409#101', 'robot3_ziru_20180828#101']
+         'db_guotairenshou_20190409#101', 'robot3_ziru_20180828#101'][0:1]
 if __name__ == "__main__":
     # prepare parameters
     train_data_dir = r"E:\云问\数据\task6triple\triple\train"
@@ -187,7 +187,7 @@ if __name__ == "__main__":
         {'params': [p for n, p in param_optimizer if any(nd in n for nd in no_decay)], 'weight_decay': 0.0}
     ]
     optimizer = BertAdam(optimizer_grouped_parameters,
-                         schedule="None",
+                         schedule="none",
                          lr=learning_rate,
                          warmup=warmup_proportion,
                          t_total=num_train_optimization_steps)
@@ -199,4 +199,4 @@ if __name__ == "__main__":
 
     knowledge_distillation(teacher_model=teacher_model, student_model=student_model, train_data=train_dataloader,
                            evaluate_data=None, device=device, loss_model=loss_model, optimizer=optimizer,
-                           evaluator=evaluator, num_epoch=num_train_epochs, split_data=None)
+                           evaluator=evaluator, num_epoch=num_train_epochs, split_data=lambda x: (x[0:5], x[5:10]))
