@@ -133,7 +133,7 @@ names = ['db_zhongyingrenshou_20190409#573', 'db_youzu_20190409#101', 'robot3_me
          'db_shanghaitushu_20190409#17169', 'db_debang_duinei_20190409#101', 'robot3_dianli_0428#101',
          'db_boxijiadian_20190409#105', 'db_zhaobiaowang_20190409#101', 'robot4_haikang_20180606#83',
          'db_saikesi_20190409#1037', 'robot4_wuxianji_20180615#34', 'robot3_fangxin_20190125#101',
-         'db_guotairenshou_20190409#101', 'robot3_ziru_20180828#101'][0:1]
+         'db_guotairenshou_20190409#101', 'robot3_ziru_20180828#101']
 if __name__ == "__main__":
     # prepare parameters
     train_data_dir = r"E:\云问\数据\task6triple\triple\train"
