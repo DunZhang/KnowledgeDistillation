@@ -130,7 +130,7 @@ names = ['db_zhongyingrenshou_20190409#573', 'db_youzu_20190409#101', 'robot3_me
          'db_guotairenshou_20190409#101', 'robot3_ziru_20180828#101'][0:2]
 if __name__ == "__main__":
     train_data_dir = r"E:\云问\数据\task6triple\triple\train"
-    train_file_names = []
+    train_file_names = [i + ".txt" for i in names]
     do_lower_case = True
     max_seq_length = 128
     train_batch_size = 36
