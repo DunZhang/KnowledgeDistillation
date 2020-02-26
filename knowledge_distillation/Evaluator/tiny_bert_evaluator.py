@@ -11,7 +11,7 @@ class TinyBERTEvaluator(Evaluator):
 
     def evaluate(self, teacher_model, student_model, evaluate_data, epoch, step, loss_value):
         if step % 50 == 0:
-            self.loss_fw.write(str(epoch) + "-" + str(step) + "-" + str(loss_value))
+            self.loss_fw.write(str(epoch) + "-" + str(step) + "-" + str(loss_value) + "\n")
             self.loss_fw.flush()
             print(epoch, step, loss_value)
         if step > 0 and step % self.save_step == 0:
