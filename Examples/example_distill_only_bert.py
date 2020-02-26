@@ -164,7 +164,7 @@ if __name__ == "__main__":
     student_train_data = features_to_tensor(output_mode,student_train_features)
     teacher_train_data = features_to_tensor(output_mode,teacher_train_features)
 
-    train_data = TensorDataset(*teacher_train_data,*student_train_data)
+    train_data = TensorDataset(*(teacher_train_data+student_train_data))
 
     train_sampler = RandomSampler(train_data)
     train_dataloader = DataLoader(train_data, sampler=train_sampler, batch_size=train_batch_size,
