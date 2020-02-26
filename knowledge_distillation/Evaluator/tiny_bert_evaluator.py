@@ -17,4 +17,4 @@ class TinyBERTEvaluator(Evaluator):
         if step > 0 and step % self.save_step == 0:
             save_path = os.path.join(self.save_dir, str(epoch) + "-" + str(step))
             os.makedirs(save_path, exist_ok=True)
-            student_model.save(self.save_dir)
+            student_model.save(save_path)
