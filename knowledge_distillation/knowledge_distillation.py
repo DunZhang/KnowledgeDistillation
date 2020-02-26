@@ -3,10 +3,6 @@ import torch
 import tqdm
 
 
-def split_student_teacher_data(batch_data):
-    return batch_data[0:5], batch_data[5:]
-
-
 def knowledge_distillation(teacher_model, student_model, train_data, evaluate_data, device,
                            loss_model, optimizer, evaluator, num_epoch, split_data=None):
     teacher_model.eval()
