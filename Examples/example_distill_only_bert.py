@@ -145,15 +145,17 @@ if __name__ == "__main__":
     num_train_epochs = 10
     learning_rate = 1e-5
     warmup_proportion = 0.1
+    save_step = 500
     student_model_dir = r"G:\Data\rbt3"
     teacher_model_dir = r"G:\Codes\PythonProj\SBERT\output\SimBERTCLS2e6\0_BERT"
-    output_dir = "output/"
+    output_dir = "output/T-SimBERT-S-RBT3"
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     processor = TripletProcessor(train_data_dir)
     output_mode = "classification"
     label_list = processor.get_labels()
     num_labels = len(label_list)
     # prepare training data
+    os.makedirs(output_dir)
     student_tokenizer = BertTokenizer.from_pretrained(student_model_dir, do_lower_case=do_lower_case)
     teacher_tokenizer = BertTokenizer.from_pretrained(teacher_model_dir, do_lower_case=do_lower_case)
     train_examples = processor.get_examples(train_file_names)
@@ -195,7 +197,7 @@ if __name__ == "__main__":
     # loss model
     loss_model = BERTLoss(compute_cls_loss=True)
     # evalator
-    evaluator = TinyBERTEvaluator(save_dir=output_dir, save_step=2000)
+    evaluator = TinyBERTEvaluator(save_dir=output_dir, save_step=save_step)
 
     knowledge_distillation(teacher_model=teacher_model, student_model=student_model, train_data=train_dataloader,
                            evaluate_data=None, device=device, loss_model=loss_model, optimizer=optimizer,
