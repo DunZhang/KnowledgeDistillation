@@ -34,7 +34,7 @@ def smart_batch_(x):
     return input_ids, input_mask, segment_ids, label_ids, seq_lengths
 
 def smart_batch(x):
-    return  smart_batch_(x[0:5])+smart_batch_(x[5:])
+    return  smart_batch_([i[0:5] for i in x])+smart_batch_([i[5:] for i in x])
 
 def convert_examples_to_features(examples, label_list, max_seq_length,
                                  tokenizer, output_mode):
@@ -127,7 +127,7 @@ names = ['db_zhongyingrenshou_20190409#573', 'db_youzu_20190409#101', 'robot3_me
          'db_shanghaitushu_20190409#17169', 'db_debang_duinei_20190409#101', 'robot3_dianli_0428#101',
          'db_boxijiadian_20190409#105', 'db_zhaobiaowang_20190409#101', 'robot4_haikang_20180606#83',
          'db_saikesi_20190409#1037', 'robot4_wuxianji_20180615#34', 'robot3_fangxin_20190125#101',
-         'db_guotairenshou_20190409#101', 'robot3_ziru_20180828#101'][0:2]
+         'db_guotairenshou_20190409#101', 'robot3_ziru_20180828#101']
 if __name__ == "__main__":
     train_data_dir = r"E:\云问\数据\task6triple\triple\train"
     train_file_names = [i + ".txt" for i in names]
@@ -170,4 +170,5 @@ if __name__ == "__main__":
     train_dataloader = DataLoader(train_data, sampler=train_sampler, batch_size=train_batch_size,
                                   collate_fn=smart_batch)
     for batch_data in train_dataloader:
-        print(len(batch_data),batch_data[0].shape,batch_data[5].shape)
+        if not batch_data[0].shape==batch_data[5].shape:
+            print(11111)
