@@ -17,6 +17,9 @@ from torch.nn import CrossEntropyLoss, MSELoss
 from knowledge_distillation.Model import TinyBERT
 from transformers import BertTokenizer
 from knowledge_distillation.DataProcessor import InputExample, InputFeatures, TripletProcessor
+from knowledge_distillation.Optimizer import BertAdam
+from knowledge_distillation.Loss import BERTLoss
+from knowledge_distillation.Evaluator import TinyBERTEvaluator
 
 os.environ["CUDA_VISIBLE_DEVICES"] = "0"
 logger = logging.getLogger()
@@ -33,8 +36,10 @@ def smart_batch_(x):
     segment_ids = torch.cat([i[2][0:max_seq_len].unsqueeze(0) for i in x], dim=0).long()
     return input_ids, input_mask, segment_ids, label_ids, seq_lengths
 
+
 def smart_batch(x):
-    return  smart_batch_([i[0:5] for i in x])+smart_batch_([i[5:] for i in x])
+    return smart_batch_([i[0:5] for i in x]) + smart_batch_([i[5:] for i in x])
+
 
 def convert_examples_to_features(examples, label_list, max_seq_length,
                                  tokenizer, output_mode):
@@ -117,6 +122,7 @@ def features_to_tensor(output_mode, features):
     all_segment_ids = torch.tensor([f.segment_ids for f in features], dtype=torch.long)
     return all_input_ids, all_input_mask, all_segment_ids, all_label_ids, all_seq_lengths
 
+
 names = ['db_zhongyingrenshou_20190409#573', 'db_youzu_20190409#101', 'robot3_meidi_20190528#101',
          'db_youzu_20190409#109', 'db_fuweike_20190409#101', 'db_beijingcanlian_20190409#101',
          'db_zhubajie_20190409#19203', 'db_ppmoney_20190409#101', 'robot3_jinli_20180131#101', 'robot3_xishanju#101',
@@ -129,46 +135,68 @@ names = ['db_zhongyingrenshou_20190409#573', 'db_youzu_20190409#101', 'robot3_me
          'db_saikesi_20190409#1037', 'robot4_wuxianji_20180615#34', 'robot3_fangxin_20190125#101',
          'db_guotairenshou_20190409#101', 'robot3_ziru_20180828#101']
 if __name__ == "__main__":
+    # prepare parameters
     train_data_dir = r"E:\云问\数据\task6triple\triple\train"
     train_file_names = [i + ".txt" for i in names]
     do_lower_case = True
-    max_seq_length = 128
+    max_seq_length = 80
     train_batch_size = 36
     gradient_accumulation_steps = 1
     num_train_epochs = 10
+    learning_rate = 1e-5
+    warmup_proportion = 0.1
     student_model_dir = r"G:\Data\rbt3"
     teacher_model_dir = r"G:\Codes\PythonProj\SBERT\output\SimBERTCLS2e6\0_BERT"
-
+    output_dir = "output/"
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     processor = TripletProcessor(train_data_dir)
     output_mode = "classification"
     label_list = processor.get_labels()
     num_labels = len(label_list)
-
+    # prepare training data
     student_tokenizer = BertTokenizer.from_pretrained(student_model_dir, do_lower_case=do_lower_case)
     teacher_tokenizer = BertTokenizer.from_pretrained(teacher_model_dir, do_lower_case=do_lower_case)
-
-    # 准备训练数据
-
     train_examples = processor.get_examples(train_file_names)
     train_batch_size = train_batch_size // gradient_accumulation_steps
-
     num_train_optimization_steps = int(
         len(train_examples) / train_batch_size / gradient_accumulation_steps) * num_train_epochs
-
     student_train_features = convert_examples_to_features(train_examples, label_list, max_seq_length, student_tokenizer,
                                                           output_mode)
     teacher_train_features = convert_examples_to_features(train_examples, label_list, max_seq_length, teacher_tokenizer,
                                                           output_mode)
     # train_data: TensorDataset(all_input_ids, all_input_mask, all_segment_ids,all_label_ids, all_seq_lengths)
-    student_train_data = features_to_tensor(output_mode,student_train_features)
-    teacher_train_data = features_to_tensor(output_mode,teacher_train_features)
+    student_train_data = features_to_tensor(output_mode, student_train_features)
+    teacher_train_data = features_to_tensor(output_mode, teacher_train_features)
 
-    train_data = TensorDataset(*(teacher_train_data+student_train_data))
+    train_data = TensorDataset(*(teacher_train_data + student_train_data))
 
     train_sampler = RandomSampler(train_data)
     train_dataloader = DataLoader(train_data, sampler=train_sampler, batch_size=train_batch_size,
                                   collate_fn=smart_batch)
-    for batch_data in train_dataloader:
-        if not batch_data[0].shape==batch_data[5].shape:
-            print(11111)
+
+    # load models
+    teacher_model = TinyBERT.from_pretrained(teacher_model_dir)
+    teacher_model.to(device)
+    student_model = TinyBERT.from_pretrained(student_model_dir)
+    student_model.to(device)
+    # prepare optimizer
+    param_optimizer = list(student_model.named_parameters())
+    no_decay = ['bias', 'LayerNorm.bias', 'LayerNorm.weight']
+    optimizer_grouped_parameters = [
+        {'params': [p for n, p in param_optimizer if not any(nd in n for nd in no_decay)], 'weight_decay': 0.01},
+        {'params': [p for n, p in param_optimizer if any(nd in n for nd in no_decay)], 'weight_decay': 0.0}
+    ]
+    optimizer = BertAdam(optimizer_grouped_parameters,
+                         schedule="None",
+                         lr=learning_rate,
+                         warmup=warmup_proportion,
+                         t_total=num_train_optimization_steps)
+
+    # loss model
+    loss_model = BERTLoss(compute_cls_loss=True)
+    # evalator
+    evaluator = TinyBERTEvaluator(save_dir=output_dir, save_step=2000)
+
+    knowledge_distillation(teacher_model=teacher_model, student_model=student_model, train_data=train_dataloader,
+                           evaluate_data=None, device=device, loss_model=loss_model, optimizer=optimizer,
+                           evaluator=evaluator, num_epoch=num_train_epochs, split_data=None)
