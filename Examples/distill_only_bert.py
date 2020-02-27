@@ -35,9 +35,9 @@ if __name__ == "__main__":
 
     # load construct models
     # for teacher model, we use pretrained model
-    # teacher_model = TinyBERT.from_pretrained("bert-base-uncased",output_hidden_states=True,output_attentions=True)
-    teacher_model = BertModel.from_pretrained(r"G:\Data\BERTModel\torch\uncased_L-12_H-768_A-12",
-                                              output_hidden_states=True, output_attentions=True)
+    teacher_model = BertModel.from_pretrained("bert-base-uncased", output_hidden_states=True, output_attentions=True)
+    # teacher_model = BertModel.from_pretrained(r"G:\Data\BERTModel\torch\uncased_L-12_H-768_A-12",
+    #                                           output_hidden_states=True, output_attentions=True)
     teacher_model.to(device)
     # for student model, we use three layers of bert
     bert_config = BertConfig(num_hidden_layers=3, output_hidden_states=True, output_attentions=True)
