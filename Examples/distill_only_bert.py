@@ -24,7 +24,7 @@ if __name__ == "__main__":
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
     # We just generate some random data
-    input_ids = torch.LongTensor(np.random.randint(0, 10000, (1000, 64)))
+    input_ids = torch.LongTensor(np.random.randint(0, 1000, (10000, 64)))
     attention_mask = torch.LongTensor(np.ones((10000, 64)))
     token_type_ids = torch.LongTensor(np.zeros((10000, 64)))
 
