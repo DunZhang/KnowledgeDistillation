@@ -2,21 +2,15 @@
 
 
 from knowledge_distillation import knowledge_distillation
-import argparse
-import csv
 import logging
 import os
-import random
-import sys
 
-import numpy as np
 import torch
-from torch.utils.data import DataLoader, RandomSampler, SequentialSampler, TensorDataset
-from tqdm import tqdm, trange
-from torch.nn import CrossEntropyLoss, MSELoss
+from torch.utils.data import DataLoader, RandomSampler, TensorDataset
+
 from knowledge_distillation.Model import TinyBERT
 from transformers import BertTokenizer
-from knowledge_distillation.DataProcessor import InputExample, InputFeatures, TripletProcessor
+from knowledge_distillation.DataProcessor import InputFeatures, TripletProcessor
 from knowledge_distillation.Optimizer import BertAdam
 from knowledge_distillation.Loss import BERTLoss
 from knowledge_distillation.Evaluator import TinyBERTEvaluator
@@ -26,7 +20,7 @@ logger = logging.getLogger()
 
 
 def smart_batch_(x):
-    """ 动态batch """
+    """ samrt batch """
     # print([i[-1] for i in x])
     seq_lengths = torch.tensor([i[-1] for i in x], dtype=torch.long)
     label_ids = torch.tensor([i[-2] for i in x], dtype=torch.long)
@@ -120,7 +114,7 @@ def features_to_tensor(output_mode, features):
     all_input_ids = torch.tensor([f.input_ids for f in features], dtype=torch.long)
     all_input_mask = torch.tensor([f.input_mask for f in features], dtype=torch.long)
     all_segment_ids = torch.tensor([f.segment_ids for f in features], dtype=torch.long)
-    return all_input_ids, all_segment_ids, all_input_mask, all_label_ids, all_seq_lengths
+    return all_input_ids, all_input_mask, all_segment_ids, all_label_ids, all_seq_lengths
 
 
 names = ['db_zhongyingrenshou_20190409#573', 'db_youzu_20190409#101', 'robot3_meidi_20190528#101',
