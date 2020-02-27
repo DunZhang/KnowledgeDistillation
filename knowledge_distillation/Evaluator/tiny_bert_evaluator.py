@@ -12,7 +12,7 @@ class TinyBERTEvaluator(Evaluator):
             self.loss_fw = open(os.path.join(save_dir, "loss.txt"), "w", encoding="utf8")
 
     def evaluate(self, teacher_model, student_model, evaluate_data, epoch, step, loss_value):
-        if step % 50 == 0:
+        if step % 10 == 0:
             print(epoch, step, loss_value)
             if self.save_dir and self.save_step:
                 self.loss_fw.write(str(epoch) + "-" + str(step) + "-" + str(loss_value) + "\n")

@@ -6,11 +6,10 @@ class BERTLoss(nn.Module):
     def __init__(self, compute_cls_loss=False):
         super(BERTLoss, self).__init__()
         self.loss_mse = nn.MSELoss()
-        self.compute_cls_loss = compute_cls_loss
 
     def forward(self, teacher_output, student_output, batch_data):
-        teacher_pooler_output, teacher_atts, teacher_reps = teacher_output
-        student_pooler_output, student_atts, student_reps = student_output
+        _, _, teacher_reps, teacher_atts = teacher_output
+        _, _, student_reps, student_atts = student_output
 
         teacher_layer_num = len(teacher_atts)
         student_layer_num = len(student_atts)
@@ -33,10 +32,6 @@ class BERTLoss(nn.Module):
         for student_rep, teacher_rep in zip(new_student_reps, new_teacher_reps):
             tmp_loss = self.loss_mse(student_rep, teacher_rep)
             rep_loss += tmp_loss
-        # compute cls loss
-        cls_loss = 0.
-        if self.compute_cls_loss:
-            cls_loss = self.loss_mse(student_pooler_output, teacher_pooler_output)
-        loss = rep_loss + att_loss + cls_loss
+        loss = rep_loss + att_loss
 
         return loss

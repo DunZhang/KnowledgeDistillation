@@ -8,7 +8,6 @@ import numpy as np
 import torch
 from torch.utils.data import DataLoader, RandomSampler, TensorDataset
 
-from knowledge_distillation.Model import TinyBERT
 from transformers import BertModel, BertConfig
 from knowledge_distillation.Optimizer import BertAdam
 from knowledge_distillation.Loss import BERTLoss
@@ -20,26 +19,28 @@ logger = logging.getLogger()
 if __name__ == "__main__":
     # some parameters
     train_batch_size = 36
-    num_train_epochs = 10
-    learning_rate = 1e-5
+    num_train_epochs = 20
+    learning_rate = 5e-5
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
     # We just generate some random data
-    input_ids = torch.LongTensor(np.random.randint(0, 1000, (1000, 64)))
-    attention_mask = torch.LongTensor(np.ones(0, 1000, (1000, 64)))
-    token_type_ids = torch.LongTensor(np.zeros(0, 1000, (1000, 64)))
+    input_ids = torch.LongTensor(np.random.randint(0, 10000, (1000, 64)))
+    attention_mask = torch.LongTensor(np.ones((10000, 64)))
+    token_type_ids = torch.LongTensor(np.zeros((10000, 64)))
 
     train_data = TensorDataset(input_ids, attention_mask, token_type_ids)
 
     train_sampler = RandomSampler(train_data)
-    train_dataloader = DataLoader(train_data, sampler=train_sampler, batch_size=train_batch_size, )
+    train_dataloader = DataLoader(train_data, sampler=train_sampler, batch_size=train_batch_size)
 
     # load construct models
     # for teacher model, we use pretrained model
-    teacher_model = TinyBERT.from_pretrained("bert-base-uncased")
+    # teacher_model = TinyBERT.from_pretrained("bert-base-uncased",output_hidden_states=True,output_attentions=True)
+    teacher_model = BertModel.from_pretrained(r"G:\Data\BERTModel\torch\uncased_L-12_H-768_A-12",
+                                              output_hidden_states=True, output_attentions=True)
     teacher_model.to(device)
     # for student model, we use three layers of bert
-    bert_config = BertConfig(num_hidden_layers=3)
+    bert_config = BertConfig(num_hidden_layers=3, output_hidden_states=True, output_attentions=True)
     student_model = BertModel(bert_config)
     student_model.to(device)
     # prepare optimizer
