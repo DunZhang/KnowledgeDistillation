@@ -1,2 +1,2 @@
-from .bert_loss import BERTLoss
-from .tiny_bert_loss import TinyBERTLoss
+from .multi_layer_based_distillation_loss import MultiLayerBasedDistillationLoss
+from .cosine_similarity_loss import CosineSimilarityLoss

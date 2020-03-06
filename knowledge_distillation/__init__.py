@@ -1,1 +1,3 @@
-from .knowledge_distillation import knowledge_distillation
+from .knowledge_distillation import KnowledgeDistiller
+from .Loss import MultiLayerBasedDistillationLoss
+from .Evaluator import MultiLayerBasedDistillationEvaluator

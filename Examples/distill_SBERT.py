@@ -193,6 +193,6 @@ if __name__ == "__main__":
     # evalator
     evaluator = TinyBERTEvaluator(save_dir=output_dir, save_step=save_step)
 
-    knowledge_distillation(teacher_model=teacher_model, student_model=student_model, train_data=train_dataloader,
-                           evaluate_data=None, device=device, loss_model=loss_model, optimizer=optimizer,
-                           evaluator=evaluator, num_epoch=num_train_epochs, split_data=lambda x: (x[0:5], x[5:10]))
+    knowledge_distillation(teacher_model=teacher_model, student_model=student_model, train_data_loader=train_dataloader,
+                           dev_data_loader=None, device=device, loss_model=loss_model, optimizer=optimizer,
+                           evaluator=evaluator, num_epoch=num_train_epochs, train_data_adaptor=lambda x: (x[0:5], x[5:10]))

@@ -1,2 +1,2 @@
 from .evaluator import Evaluator
-from .tiny_bert_evaluator import TinyBERTEvaluator
+from .multi_layer_based_distillation_evaluator import MultiLayerBasedDistillationEvaluator

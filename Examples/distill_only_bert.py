@@ -15,7 +15,7 @@ from knowledge_distillation.Evaluator import TinyBERTEvaluator
 
 os.environ["CUDA_VISIBLE_DEVICES"] = "0"
 logger = logging.getLogger()
-
+# the data_adaptor is to tranform the train_data or dev_data to input of student_model or teacher_model
 if __name__ == "__main__":
     # some parameters
     train_batch_size = 36
@@ -27,9 +27,7 @@ if __name__ == "__main__":
     input_ids = torch.LongTensor(np.random.randint(0, 1000, (10000, 64)))
     attention_mask = torch.LongTensor(np.ones((10000, 64)))
     token_type_ids = torch.LongTensor(np.zeros((10000, 64)))
-
     train_data = TensorDataset(input_ids, attention_mask, token_type_ids)
-
     train_sampler = RandomSampler(train_data)
     train_dataloader = DataLoader(train_data, sampler=train_sampler, batch_size=train_batch_size)
 
@@ -61,6 +59,6 @@ if __name__ == "__main__":
     # evalator
     evaluator = TinyBERTEvaluator(save_dir=None, save_step=None)
 
-    knowledge_distillation(teacher_model=teacher_model, student_model=student_model, train_data=train_dataloader,
-                           evaluate_data=None, device=device, loss_model=loss_model, optimizer=optimizer,
-                           evaluator=evaluator, num_epoch=num_train_epochs, split_data=None)
+    knowledge_distillation(teacher_model=teacher_model, student_model=student_model, train_data_loader=train_dataloader,
+                           dev_data_loader=None, device=device, loss_model=loss_model, optimizer=optimizer,
+                           evaluator=evaluator, num_epoch=num_train_epochs, train_data_adaptor=None)
