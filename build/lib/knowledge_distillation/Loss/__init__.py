@@ -1,0 +1,2 @@
+from .multi_layer_based_distillation_loss import MultiLayerBasedDistillationLoss
+from .cosine_similarity_loss import CosineSimilarityLoss

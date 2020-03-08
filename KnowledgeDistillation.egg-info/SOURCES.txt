@@ -1,0 +1,17 @@
+README.md
+setup.py
+Examples/__init__.py
+Examples/distill_bert.py
+KnowledgeDistillation.egg-info/PKG-INFO
+KnowledgeDistillation.egg-info/SOURCES.txt
+KnowledgeDistillation.egg-info/dependency_links.txt
+KnowledgeDistillation.egg-info/requires.txt
+KnowledgeDistillation.egg-info/top_level.txt
+knowledge_distillation/__init__.py
+knowledge_distillation/knowledge_distillation.py
+knowledge_distillation/Evaluator/__init__.py
+knowledge_distillation/Evaluator/evaluator.py
+knowledge_distillation/Evaluator/multi_layer_based_distillation_evaluator.py
+knowledge_distillation/Loss/__init__.py
+knowledge_distillation/Loss/cosine_similarity_loss.py
+knowledge_distillation/Loss/multi_layer_based_distillation_loss.py
