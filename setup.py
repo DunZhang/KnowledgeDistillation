@@ -4,8 +4,7 @@ setup(
     name='KnowledgeDistillation',
     version="1.0.1",
     description=('A general knowledge distillation framework'),
-    long_description=open('README.md', "r", encoding="utf8").read(),
-    long_description_content_type="text/markdown",
+    long_description=open('README.rst').read(),
     author='ZhangDun',
     author_email='dunnzhang0@gmail.com',
     maintainer='ZhangDun',
@@ -26,5 +25,5 @@ setup(
         'License :: OSI Approved :: MIT License',
         'Topic :: Scientific/Engineering :: Artificial Intelligence'
     ],
-    keywords="Transformer Networks BERT XLNet  PyTorch NLP deep learning"
+    keywords="Transformer Networks BERT XLNet PyTorch NLP deep learning"
 )
