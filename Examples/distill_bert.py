@@ -7,15 +7,15 @@ import logging
 import numpy as np
 from transformers import BertModel, BertConfig
 from torch.utils.data import DataLoader, RandomSampler, TensorDataset
-import torch.nn.functional as F
+
 from knowledge_distillation import KnowledgeDistiller, MultiLayerBasedDistillationLoss
 from knowledge_distillation import MultiLayerBasedDistillationEvaluator
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 # Some global variables
-train_batch_size = 16
+train_batch_size = 40
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-learning_rate = 2e-5
+learning_rate = 1e-5
 num_epoch = 10
 # Teacher Model
 bert_config = BertConfig(num_hidden_layers=12, output_hidden_states=True, output_attentions=True)
@@ -25,9 +25,9 @@ bert_config = BertConfig(num_hidden_layers=3, output_hidden_states=True, output_
 student_model = BertModel(bert_config)
 
 ### Train data loader
-input_ids = torch.LongTensor(np.random.randint(100, 1000, (1000, 64)))
-attention_mask = torch.LongTensor(np.ones((1000, 64)))
-token_type_ids = torch.LongTensor(np.zeros((1000, 64)))
+input_ids = torch.LongTensor(np.random.randint(100, 1000, (100000, 50)))
+attention_mask = torch.LongTensor(np.ones((100000, 50)))
+token_type_ids = torch.LongTensor(np.zeros((100000, 50)))
 train_data = TensorDataset(input_ids, attention_mask, token_type_ids)
 train_sampler = RandomSampler(train_data)
 train_dataloader = DataLoader(train_data, sampler=train_sampler, batch_size=train_batch_size)
@@ -54,72 +54,41 @@ def train_data_adaptor(device, batch_data):
 #### It also defines which output of which layer to calculate loss.
 #### type "ts_distill" means that we compute loss between teacher and student
 #### type "hard_distill" means that we compute loss between student output and ground truth
-#### You should define a loss function.
-#### The loss funtions has four parameters: teacher_output, student_output, teacher_input( from train dataloader),
-# and student_input
-### Here is an example
-def mse_with_mask(teacher_output, student_output, teacher_input=None, student_input=None):
-    mask = teacher_input["attention_mask"]
-    mask = mask.to(student_output)
-    # * hidden_size
-    valid_count = mask.sum() * student_output.size(-1)
-    loss = (F.mse_loss(teacher_output, student_output, reduction='none') * mask.unsqueeze(-1)).sum() / valid_count
-    return loss
-
-
-def attention_mse_with_mask(teacher_output, student_output, teacher_input=None, student_input=None):
-    mask = teacher_input["attention_mask"]
-    mask = mask.to(student_output).unsqueeze(1).expand(-1, student_output.size(1), -1)  # (bs, num_of_heads, len)
-    valid_count = torch.pow(mask.sum(dim=2), 2).sum()
-    loss = (F.mse_loss(student_output, teacher_output, reduction='none') * mask.unsqueeze(-1) * mask.unsqueeze(
-        2)).sum() / valid_count
-    return loss
-
-
-def mse(teacher_output, student_output, teacher_input=None, student_input=None):
-    return F.mse_loss(teacher_output, student_output, reduction='mean')
-
 
 distill_config = [
-    {"type": "ts_distill",
-     "teacher_layer_name": "embedding_layer", "teacher_layer_output_name": "embedding",
+    {"teacher_layer_name": "embedding_layer", "teacher_layer_output_name": "embedding",
      "student_layer_name": "embedding_layer", "student_layer_output_name": "embedding",
-     "loss": {"loss_function": mse_with_mask, "args": {}}, "weight": 1.0
+     "loss": {"loss_function": "mse_with_mask", "args": {}}, "weight": 1.0
      },
-    {"type": "ts_distill",
-     "teacher_layer_name": "bert_layer4", "teacher_layer_output_name": "hidden_states",
+    {"teacher_layer_name": "bert_layer4", "teacher_layer_output_name": "hidden_states",
      "student_layer_name": "bert_layer1", "student_layer_output_name": "hidden_states",
-     "loss": {"loss_function": mse_with_mask, "args": {}}, "weight": 1.0
+     "loss": {"loss_function": "mse_with_mask", "args": {}}, "weight": 1.0
      },
-    {"type": "ts_distill",
-     "teacher_layer_name": "bert_layer4", "teacher_layer_output_name": "attention",
-     "student_layer_name": "bert_layer1", "student_layer_output_name": "attention",
-     "loss": {"loss_function": attention_mse_with_mask, "args": {}}, "weight": 1.0
-     },
-    {"type": "ts_distill",
-     "teacher_layer_name": "bert_layer8", "teacher_layer_output_name": "hidden_states",
+    {"teacher_layer_name": "bert_layer8", "teacher_layer_output_name": "hidden_states",
      "student_layer_name": "bert_layer2", "student_layer_output_name": "hidden_states",
-     "loss": {"loss_function": mse_with_mask, "args": {}}, "weight": 1.0
-     },
-    {"type": "ts_distill",
-     "teacher_layer_name": "bert_layer8", "teacher_layer_output_name": "attention",
-     "student_layer_name": "bert_layer2", "student_layer_output_name": "attention",
-     "loss": {"loss_function": attention_mse_with_mask, "args": {}}, "weight": 1.0
+     "loss": {"loss_function": "mse_with_mask", "args": {}}, "weight": 1.0
      },
     {"type": "ts_distill",
      "teacher_layer_name": "bert_layer12", "teacher_layer_output_name": "hidden_states",
      "student_layer_name": "bert_layer3", "student_layer_output_name": "hidden_states",
-     "loss": {"loss_function": mse_with_mask, "args": {}}, "weight": 1.0
+     "loss": {"loss_function": "mse_with_mask", "args": {}}, "weight": 1.0
      },
-    {"type": "ts_distill",
-     "teacher_layer_name": "bert_layer12", "teacher_layer_output_name": "attention",
+    {"teacher_layer_name": "bert_layer4", "teacher_layer_output_name": "attention",
+     "student_layer_name": "bert_layer1", "student_layer_output_name": "attention",
+     "loss": {"loss_function": "attention_mse_with_mask", "args": {}}, "weight": 1.0
+     },
+
+    {"teacher_layer_name": "bert_layer8", "teacher_layer_output_name": "attention",
+     "student_layer_name": "bert_layer2", "student_layer_output_name": "attention",
+     "loss": {"loss_function": "attention_mse_with_mask", "args": {}}, "weight": 1.0
+     },
+    {"teacher_layer_name": "bert_layer12", "teacher_layer_output_name": "attention",
      "student_layer_name": "bert_layer3", "student_layer_output_name": "attention",
-     "loss": {"loss_function": attention_mse_with_mask, "args": {}}, "weight": 1.0
+     "loss": {"loss_function": "attention_mse_with_mask", "args": {}}, "weight": 1.0
      },
-    {"type": "ts_distill",
-     "teacher_layer_name": "pred_layer", "teacher_layer_output_name": "pooler_output",
+    {"teacher_layer_name": "pred_layer", "teacher_layer_output_name": "pooler_output",
      "student_layer_name": "pred_layer", "student_layer_output_name": "pooler_output",
-     "loss": {"loss_function": mse, "args": {}}, "weight": 1.0
+     "loss": {"loss_function": "mse", "args": {}}, "weight": 1.0
      },
 ]
 
@@ -152,7 +121,8 @@ optimizer_grouped_parameters = [
 ]
 optimizer = torch.optim.Adam(params=optimizer_grouped_parameters, lr=learning_rate)
 # evaluator
-evaluator = MultiLayerBasedDistillationEvaluator(save_dir=None, save_step=None, print_loss_step=20)
+# this is a basic evalator, it can output loss value and save models
+evaluator = MultiLayerBasedDistillationEvaluator(save_dir="save_model", save_step=1000, print_loss_step=20)
 # Get a KnowledgeDistiller
 distiller = KnowledgeDistiller(teacher_model=teacher_model, student_model=student_model,
                                train_dataloader=train_dataloader, dev_dataloader=None,

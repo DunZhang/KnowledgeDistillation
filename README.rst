@@ -1,6 +1,17 @@
 KnowledgeDistillation
 ======================
 
+Update
+------------
+**March, 2020**
+
+- Now, users could define their own loss functions. The requirement of loss function can be found in API document.
+
+- Add more built-in loss functions (**mse_with_mask** and **attention_mse_with_mask**).
+
+- Unify hidden loss and predict loss, the key "type" is removed from distill_config.
+
+- Now, the device information is removed from loss value.
 
 Introduction
 ------------

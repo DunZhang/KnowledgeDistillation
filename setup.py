@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name='KnowledgeDistillation',
-    version="1.0.1",
+    version="1.0.2",
     description=('A general knowledge distillation framework'),
     long_description=open('README.rst').read(),
     author='ZhangDun',
