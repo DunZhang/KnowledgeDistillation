@@ -31,7 +31,7 @@ class KnowledgeDistiller():
                     student_output = self.student_model.forward(**student_batch_data)
                 else:
                     student_output = self.student_model.forward(*student_batch_data)
-                loss = self.loss_model.forward(teacher_output, student_output, batch_data)
+                loss = self.loss_model.forward(teacher_output, student_output, teacher_batch_data, student_batch_data)
                 loss.backward()
                 self.optimizer.step()
                 self.optimizer.zero_grad()
