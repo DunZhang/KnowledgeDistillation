@@ -1,5 +1,5 @@
 """
-This is a simple example to distill a samll bert bu bigger bert
+This is a simple example to distill a small bert by bigger bert
 
 """
 import torch

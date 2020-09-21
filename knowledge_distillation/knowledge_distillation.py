@@ -1,9 +1,11 @@
 import torch
+from typing import Iterable
 
 
 class KnowledgeDistiller():
-    def __init__(self, teacher_model, student_model, train_dataloader, dev_dataloader, device, loss_model, optimizer,
-                 evaluator, num_epoch, train_data_adaptor, dev_data_adaptor):
+    def __init__(self, teacher_model: torch.nn.Module, student_model: torch.nn.Module, train_dataloader: Iterable,
+                 dev_dataloader: Iterable, device, loss_model: torch.nn.Module, optimizer,
+                 evaluator, num_epoch: int, train_data_adaptor, dev_data_adaptor):
         self.teacher_model = teacher_model.to(device)
         self.student_model = student_model.to(device)
         self.train_dataloader = train_dataloader

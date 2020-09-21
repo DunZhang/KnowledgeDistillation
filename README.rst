@@ -3,6 +3,18 @@ KnowledgeDistillation
 
 Update
 ------------
+**July, 2020**
+
+**Knowledge Distillation** has been used in Deep Learning for about two years.
+It is still at an early stage of development.
+So far, many distillation methods have been proposed, due to complexity and diversity of these methods,
+it is hard to integrate them into a framework. Hence, I think this package is more suitable for the beginners.
+In this update, I have add more comments, type hints and fix some typos to make it more friendly to the beginners.
+
+This is the last update for this package. When **Knowledge Distillation** is mature enough,
+I will continue to improve this package.
+
+
 **March, 2020**
 
 - Now, users could define their own loss functions. The requirement of loss function can be found in API document.
@@ -31,7 +43,7 @@ and generalized by `Hinton <https://arxiv.org/abs/1503.02531>`_.
 
 Introduction of KnowledgeDistillation Package
 :::::::::::::::::::::::::::::::::::::::::::::::
-**KnowledgeDistillation**  is a general knowledge distillation framework. You can distill your own model
+**KnowledgeDistillation**  is a knowledge distillation framework. You can distill your own model
 by using this toolkit. Our framework is highly abstract and you can achieve many distillation methods by using this framework.
 Besides, we also provide a distillation of MultiLayerBasedModel considering many models are multi layers.
 
@@ -42,7 +54,7 @@ To use the package, you should define these objects:
 
 * **Teacher Model** (large model, trained)
 * **Student Model** (small model, untrained)
-* **Data loader**, a generator or iterator to get training data or dev data. For example, torch.utils.data.DataLoader
+* **Data loader**, a generator or iterator to get training data or dev data. For example, `torch.utils.data.DataLoader`
 * **Train data adaptor**, a function that turn batch_data (from train_dataloader) to the inputs of teacher_model and student_model
 * **Distill config**, a list-object, each item indicates how to calculate loss. It also defines which output of which layer to calculate loss.
 * **Output adaptor**, a function that turn your model's output to dict-object output which meet distiller's requirements

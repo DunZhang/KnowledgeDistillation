@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name='KnowledgeDistillation',
-    version="1.0.2",
+    version="1.0.3",
     description=('A general knowledge distillation framework'),
     long_description=open('README.rst').read(),
     author='ZhangDun',
@@ -12,7 +12,7 @@ setup(
     license='MIT',
     packages=find_packages(),
     url='https://github.com/DunZhang/KnowledgeDistillation',
-    install_requires=['torch>0.4.0'],
+    install_requires=['torch>0.4.0', 'python>=3.6'],
     classifiers=[
         'Development Status :: 2 - Pre-Alpha',
         'Operating System :: Microsoft :: Windows',
