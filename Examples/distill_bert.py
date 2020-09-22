@@ -2,6 +2,7 @@
 This is a simple example to distill a small bert by bigger bert
 
 """
+# import packages
 import torch
 import logging
 import numpy as np
@@ -17,11 +18,15 @@ train_batch_size = 40
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 learning_rate = 1e-5
 num_epoch = 10
+
+# define student and teacher model
 # Teacher Model
-bert_config = BertConfig(num_hidden_layers=12, output_hidden_states=True, output_attentions=True)
+bert_config = BertConfig(num_hidden_layers=12, hidden_size=60, intermediate_size=60, output_hidden_states=True,
+                         output_attentions=True)
 teacher_model = BertModel(bert_config)
 # Student Model
-bert_config = BertConfig(num_hidden_layers=3, output_hidden_states=True, output_attentions=True)
+bert_config = BertConfig(num_hidden_layers=3, hidden_size=60, intermediate_size=60, output_hidden_states=True,
+                         output_attentions=True)
 student_model = BertModel(bert_config)
 
 ### Train data loader
@@ -52,35 +57,17 @@ def train_data_adaptor(device, batch_data):
 #### First, we should define a distill_config which indicates how to compute ths loss between teacher and student.
 #### distill_config is a list-object, each item indicates how to calculate loss.
 #### It also defines which output of which layer to calculate loss.
-#### type "ts_distill" means that we compute loss between teacher and student
-#### type "hard_distill" means that we compute loss between student output and ground truth
-
+#### It shoulde be consistent with your output_adaptor
 distill_config = [
+    # means that compute a loss by their embedding_layer's embedding
     {"teacher_layer_name": "embedding_layer", "teacher_layer_output_name": "embedding",
      "student_layer_name": "embedding_layer", "student_layer_output_name": "embedding",
      "loss": {"loss_function": "mse_with_mask", "args": {}}, "weight": 1.0
      },
-    {"teacher_layer_name": "bert_layer4", "teacher_layer_output_name": "hidden_states",
-     "student_layer_name": "bert_layer1", "student_layer_output_name": "hidden_states",
-     "loss": {"loss_function": "mse_with_mask", "args": {}}, "weight": 1.0
-     },
-    {"teacher_layer_name": "bert_layer8", "teacher_layer_output_name": "hidden_states",
-     "student_layer_name": "bert_layer2", "student_layer_output_name": "hidden_states",
-     "loss": {"loss_function": "mse_with_mask", "args": {}}, "weight": 1.0
-     },
-    {"type": "ts_distill",
-     "teacher_layer_name": "bert_layer12", "teacher_layer_output_name": "hidden_states",
+    # means that compute a loss between teacher's bert_layer12's hidden_states and student's bert_layer3's hidden_states
+    {"teacher_layer_name": "bert_layer12", "teacher_layer_output_name": "hidden_states",
      "student_layer_name": "bert_layer3", "student_layer_output_name": "hidden_states",
      "loss": {"loss_function": "mse_with_mask", "args": {}}, "weight": 1.0
-     },
-    {"teacher_layer_name": "bert_layer4", "teacher_layer_output_name": "attention",
-     "student_layer_name": "bert_layer1", "student_layer_output_name": "attention",
-     "loss": {"loss_function": "attention_mse_with_mask", "args": {}}, "weight": 1.0
-     },
-
-    {"teacher_layer_name": "bert_layer8", "teacher_layer_output_name": "attention",
-     "student_layer_name": "bert_layer2", "student_layer_output_name": "attention",
-     "loss": {"loss_function": "attention_mse_with_mask", "args": {}}, "weight": 1.0
      },
     {"teacher_layer_name": "bert_layer12", "teacher_layer_output_name": "attention",
      "student_layer_name": "bert_layer3", "student_layer_output_name": "attention",
@@ -122,6 +109,8 @@ optimizer_grouped_parameters = [
 optimizer = torch.optim.Adam(params=optimizer_grouped_parameters, lr=learning_rate)
 # evaluator
 # this is a basic evalator, it can output loss value and save models
+# You can define you own evaluator class that implements the interface IEvaluator
+
 evaluator = MultiLayerBasedDistillationEvaluator(save_dir="save_model", save_step=1000, print_loss_step=20)
 # Get a KnowledgeDistiller
 distiller = KnowledgeDistiller(teacher_model=teacher_model, student_model=student_model,

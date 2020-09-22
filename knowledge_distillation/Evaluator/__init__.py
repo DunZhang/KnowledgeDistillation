@@ -1,2 +1,2 @@
-from .evaluator import Evaluator
+from .ievaluator import IEvaluator
 from .multi_layer_based_distillation_evaluator import MultiLayerBasedDistillationEvaluator

@@ -1,12 +1,23 @@
-from .evaluator import Evaluator
+from .ievaluator import IEvaluator
 import os
 import logging
 
 logger = logging.getLogger(__name__)
 
 
-class MultiLayerBasedDistillationEvaluator(Evaluator):
+class MultiLayerBasedDistillationEvaluator(IEvaluator):
+    """
+    A simple evaluator: output loss and save model.
+    You can define you own evaluator class that implements the interface IEvaluator.
+    """
+
     def __init__(self, save_dir, save_step=None, print_loss_step=20):
+        """
+
+        :param save_dir: output directory
+        :param save_step:  frequency of saving model
+        :param print_loss_step: output loss value every (print_loss_step) steps
+        """
         super(MultiLayerBasedDistillationEvaluator, self).__init__()
         self.save_step = save_step
         self.print_loss_step = print_loss_step
