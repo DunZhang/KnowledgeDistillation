@@ -8,11 +8,15 @@ Update
 **Knowledge Distillation** has been used in Deep Learning for about two years.
 It is still at an early stage of development.
 So far, many distillation methods have been proposed, due to complexity and diversity of these methods,
-it is hard to integrate them into a framework. Hence, I think this package is more suitable for the beginners.
-In this update, I have add more comments, type hints and fix some typos to make it more friendly to the beginners.
+it is hard to integrate all of them into a framework. Hence, I think this package is more suitable for the beginners.
 
-This is the last update for this package. When **Knowledge Distillation** is mature enough,
-I will continue to improve this package.
+This package mainly contain two parts:
+
+1. Distillation of MultiLayerBasedModel
+2. Other distillation methods
+
+This is the last update for distillation of MultiLayerBasedModel. Other distillation methods will be added in succession.
+When **Knowledge Distillation** is mature enough, I will integrate them into a framework.
 
 
 **March, 2020**
@@ -85,16 +89,17 @@ command to get a copy from GitHub::
 
  git clone https://github.com/DunZhang/KnowledgeDistillation.git
 
-TODO List
--------------
-* Add multi teacher model distiller
-* Use input mask when computing loss
-* Support custom loss functions
+
+How to Contribute
+------------------
+Welcome to add examples for latest knowledge distillation methods. There is no need to add an example if the author
+has provided an official implementation. The example should be simple and easy to be executed. Hence, I suggest to make some fake data for your example.
 
 A simple example
 ----------------
 A simple example::
 
+    # import packages
     import torch
     import logging
     import numpy as np
@@ -106,21 +111,25 @@ A simple example::
 
     logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
     # Some global variables
-    train_batch_size = 16
+    train_batch_size = 40
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    learning_rate = 2e-5
+    learning_rate = 1e-5
     num_epoch = 10
+
+    # define student and teacher model
     # Teacher Model
-    bert_config = BertConfig(num_hidden_layers=12, output_hidden_states=True, output_attentions=True)
+    bert_config = BertConfig(num_hidden_layers=12, hidden_size=60, intermediate_size=60, output_hidden_states=True,
+                             output_attentions=True)
     teacher_model = BertModel(bert_config)
     # Student Model
-    bert_config = BertConfig(num_hidden_layers=3, output_hidden_states=True, output_attentions=True)
+    bert_config = BertConfig(num_hidden_layers=3, hidden_size=60, intermediate_size=60, output_hidden_states=True,
+                             output_attentions=True)
     student_model = BertModel(bert_config)
 
     ### Train data loader
-    input_ids = torch.LongTensor(np.random.randint(100, 1000, (100000, 64)))
-    attention_mask = torch.LongTensor(np.ones((100000, 64)))
-    token_type_ids = torch.LongTensor(np.zeros((100000, 64)))
+    input_ids = torch.LongTensor(np.random.randint(100, 1000, (100000, 50)))
+    attention_mask = torch.LongTensor(np.ones((100000, 50)))
+    token_type_ids = torch.LongTensor(np.zeros((100000, 50)))
     train_data = TensorDataset(input_ids, attention_mask, token_type_ids)
     train_sampler = RandomSampler(train_data)
     train_dataloader = DataLoader(train_data, sampler=train_sampler, batch_size=train_batch_size)
@@ -129,7 +138,7 @@ A simple example::
     ### Train data adaptor
     ### It is a function that turn batch_data (from train_dataloader) to the inputs of teacher_model and student_model
     ### You can define your own train_data_adaptor. Remember the input must be device and batch_data.
-    ###  The output is either dict or tuple, but must consistent with you model's input
+    ###  The output is either dict or tuple, but must be consistent with you model's input
     def train_data_adaptor(device, batch_data):
         batch_data = tuple(t.to(device) for t in batch_data)
         batch_data_dict = {"input_ids": batch_data[0],
@@ -145,47 +154,28 @@ A simple example::
     #### First, we should define a distill_config which indicates how to compute ths loss between teacher and student.
     #### distill_config is a list-object, each item indicates how to calculate loss.
     #### It also defines which output of which layer to calculate loss.
-    #### type "ts_distill" means that we compute loss between teacher and student
-    #### type "hard_distill" means that we compute loss between student output and ground truth
-    #### loss_function can be mse, cross_entropy or cos. Args is extra parameters in this loss_function
-    #### loss_function(x,y,**args)
+    #### It shoulde be consistent with your output_adaptor
     distill_config = [
-        {"type": "ts_distill",
-         "teacher_layer_name": "embedding_layer", "teacher_layer_output_name": "embedding",
+        # means that compute a loss by their embedding_layer's embedding
+        {"teacher_layer_name": "embedding_layer", "teacher_layer_output_name": "embedding",
          "student_layer_name": "embedding_layer", "student_layer_output_name": "embedding",
-         "loss": {"loss_function": "mse", "args": {}}, "weight": 1.0
+         "loss": {"loss_function": "mse_with_mask", "args": {}}, "weight": 1.0
          },
-        {"type": "ts_distill",
-         "teacher_layer_name": "bert_layer4", "teacher_layer_output_name": "hidden_states",
-         "student_layer_name": "bert_layer1", "student_layer_output_name": "hidden_states",
-         "loss": {"loss_function": "mse", "args": {}}, "weight": 1.0
-         },
-        {"type": "ts_distill",
-         "teacher_layer_name": "bert_layer4", "teacher_layer_output_name": "attention",
-         "student_layer_name": "bert_layer1", "student_layer_output_name": "attention",
-         "loss": {"loss_function": "mse", "args": {}}, "weight": 1.0
-         },
-        {"type": "ts_distill",
-         "teacher_layer_name": "bert_layer8", "teacher_layer_output_name": "hidden_states",
-         "student_layer_name": "bert_layer2", "student_layer_output_name": "hidden_states",
-         "loss": {"loss_function": "mse", "args": {}}, "weight": 1.0
-         },
-        {"type": "ts_distill",
-         "teacher_layer_name": "bert_layer8", "teacher_layer_output_name": "attention",
-         "student_layer_name": "bert_layer2", "student_layer_output_name": "attention",
-         "loss": {"loss_function": "mse", "args": {}}, "weight": 1.0
-         },
-        {"type": "ts_distill",
-         "teacher_layer_name": "bert_layer12", "teacher_layer_output_name": "hidden_states",
+        # means that compute a loss between teacher's bert_layer12's hidden_states and student's bert_layer3's hidden_states
+        {"teacher_layer_name": "bert_layer12", "teacher_layer_output_name": "hidden_states",
          "student_layer_name": "bert_layer3", "student_layer_output_name": "hidden_states",
-         "loss": {"loss_function": "mse", "args": {}}, "weight": 1.0
+         "loss": {"loss_function": "mse_with_mask", "args": {}}, "weight": 1.0
          },
-        {"type": "ts_distill",
-         "teacher_layer_name": "bert_layer12", "teacher_layer_output_name": "attention",
+        {"teacher_layer_name": "bert_layer12", "teacher_layer_output_name": "attention",
          "student_layer_name": "bert_layer3", "student_layer_output_name": "attention",
+         "loss": {"loss_function": "attention_mse_with_mask", "args": {}}, "weight": 1.0
+         },
+        {"teacher_layer_name": "pred_layer", "teacher_layer_output_name": "pooler_output",
+         "student_layer_name": "pred_layer", "student_layer_output_name": "pooler_output",
          "loss": {"loss_function": "mse", "args": {}}, "weight": 1.0
          },
     ]
+
 
     ### teacher_output_adaptor and student_output_adaptor
     ### In most cases, model's output is tuple-object, However, in our package, we need the output is dict-object,
@@ -198,6 +188,7 @@ A simple example::
         for idx in range(len(attentions)):
             output["bert_layer" + str(idx + 1)] = {"hidden_states": hidden_states[idx + 1],
                                                    "attention": attentions[idx]}
+        output["pred_layer"] = {"pooler_output": pooler_output}
         return output
 
 
@@ -214,7 +205,10 @@ A simple example::
     ]
     optimizer = torch.optim.Adam(params=optimizer_grouped_parameters, lr=learning_rate)
     # evaluator
-    evaluator = MultiLayerBasedDistillationEvaluator(save_dir=None, save_step=None, print_loss_step=20)
+    # this is a basic evalator, it can output loss value and save models
+    # You can define you own evaluator class that implements the interface IEvaluator
+
+    evaluator = MultiLayerBasedDistillationEvaluator(save_dir="save_model", save_step=1000, print_loss_step=20)
     # Get a KnowledgeDistiller
     distiller = KnowledgeDistiller(teacher_model=teacher_model, student_model=student_model,
                                    train_dataloader=train_dataloader, dev_dataloader=None,
@@ -223,5 +217,4 @@ A simple example::
                                    evaluator=evaluator, num_epoch=num_epoch)
     # start distillate
     distiller.distillate()
-
 
